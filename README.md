@@ -1,4 +1,4 @@
-ZTRESTConnection
+ZTDynamicFonts
 ================
 
-A lightweight block based REST library for OBJ-C
+Lightweight tool to define custom fonts and styles for dynamic text sizing via Settings.app
