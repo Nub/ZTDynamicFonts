@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
   s.author       = { "Zachry Thayer" => "zachthayer@gmail.com" }
   s.source       = { :git => "https://github.com/Nub/ZTDynamicFonts.git"}
 
-  s.source_files = 'UIFont+ZTDynamicFonts.h,m'
+  s.source_files = '*.h, *.m'
   s.requires_arc = true
 end
 
