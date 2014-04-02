@@ -8,6 +8,11 @@
 
 #import <UIKit/UIKit.h>
 
+extern NSString *const ZTFontTextStyleH1;
+extern NSString *const ZTFontTextStyleH2;
+extern NSString *const ZTFontTextStyleH3;
+extern NSString *const ZTFontTextStyleH4;
+
 /**
 	Overides preferredFontForTextStyle to check for custom font descriptions. Returns system
 	default fonts if no custom fonts are found. Addition custom keys may be added aswell as
@@ -35,5 +40,10 @@
 	Convenience method for obtaining the percentage of deviation from the base font size.
  **/
 + (CGFloat)preferredContentSizePercentage;
+
+/**
+	 Convenience method for obtaining the font size for a style
+ **/
++ (CGFloat)preferredFontSizeForTextStyle:(NSString *)style;
 
 @end

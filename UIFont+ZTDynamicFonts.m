@@ -9,6 +9,10 @@
 #import "UIFont+ZTDynamicFonts.h"
 #import <objc/runtime.h>
 
+NSString *const ZTFontTextStyleH1 = @"UIFontTextStyleHeadline";
+NSString *const ZTFontTextStyleH2 = @"UIFontTextStyleHeadlineTwo";
+NSString *const ZTFontTextStyleH3 = @"UIFontTextStyleHeadlineThree";
+NSString *const ZTFontTextStyleH4 = @"UIFontTextStyleHeadlineFour";
 
 static NSMutableDictionary* _UIFont_ZTDynamicFonts;
 static CGFloat _UIFont_ZTDynamicFonts_ContentSizeDeviation;
@@ -31,6 +35,11 @@ void SwizzleClassMethod(Class c, SEL orig, SEL new) {
 
 + (void)load {
     SwizzleClassMethod(self , @selector(preferredFontForTextStyle:), @selector(swizzled_preferredFontForTextStyle:));
+	static dispatch_once_t once;
+	dispatch_once(&once, ^{
+		_UIFont_ZTDynamicFonts = [NSMutableDictionary new];
+		[UIFont addBaseStyles];
+	});
 }
 
 + (UIFont*)swizzled_preferredFontForTextStyle:(NSString *)style {
@@ -38,9 +47,7 @@ void SwizzleClassMethod(Class c, SEL orig, SEL new) {
 	
 	if (_UIFont_ZTDynamicFonts) {
 		UIFontDescriptor* fontDescriptor = _UIFont_ZTDynamicFonts[style];
-		NSNumber* fontBaseSize = fontDescriptor.fontAttributes[UIFontDescriptorSizeAttribute];
-		CGFloat contentSizePercentage = [UIFont preferredContentSizePercentage];
-		CGFloat fontSize = ceil(contentSizePercentage * fontBaseSize.floatValue);
+		CGFloat fontSize = [self preferredFontSizeForTextStyle:style];
 		font = [UIFont fontWithDescriptor:fontDescriptor size:fontSize];
 	}
 	
@@ -55,11 +62,6 @@ void SwizzleClassMethod(Class c, SEL orig, SEL new) {
 	if (!font || !style) {
 		return;
 	}
-	
-	static dispatch_once_t once;
-	dispatch_once(&once, ^{
-		_UIFont_ZTDynamicFonts = [NSMutableDictionary new];
-	});
 	
 	_UIFont_ZTDynamicFonts[style] = font;
 }
@@ -100,6 +102,30 @@ void SwizzleClassMethod(Class c, SEL orig, SEL new) {
 	}
 	
 	return contentSizePercentage;
+}
+
++ (CGFloat)preferredFontSizeForTextStyle:(NSString *)style {
+	UIFontDescriptor* fontDescriptor = _UIFont_ZTDynamicFonts[style];
+	
+	NSNumber* fontBaseSize = fontDescriptor.fontAttributes[UIFontDescriptorSizeAttribute];
+	CGFloat contentSizePercentage = [UIFont preferredContentSizePercentage];
+	CGFloat fontSize = ceil(contentSizePercentage * fontBaseSize.floatValue);
+	
+	return fontSize;
+}
+
+#pragma mark - Helpers 
+
++ (void)addBaseStyles {
+	NSDictionary* styles =
+		@{
+		 ZTFontTextStyleH1 : [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleHeadline],
+		 ZTFontTextStyleH2 : [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleSubheadline],
+		 ZTFontTextStyleH3 : [[[UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleSubheadline] fontDescriptorWithSize:12] fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitBold],
+		 ZTFontTextStyleH4 : [[[UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleSubheadline] fontDescriptorWithSize:10] fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitBold],
+		 };
+	
+	[UIFont setFontDescriptorsForTextSyles:styles];
 }
 
 @end
