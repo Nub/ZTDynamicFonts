@@ -15,6 +15,8 @@ NSString *const ZTFontTextStyleH3 = @"UIFontTextStyleHeadlineThree";
 NSString *const ZTFontTextStyleH4 = @"UIFontTextStyleHeadlineFour";
 
 static NSMutableDictionary* _UIFont_ZTDynamicFonts;
+static NSCache* _UIFont_ZTDynamicFontsCache;
+
 static CGFloat _UIFont_ZTDynamicFonts_ContentSizeDeviation;
 #define DEFAULT_FONT_DEVIATION 0.1f
 
@@ -38,6 +40,7 @@ void SwizzleClassMethod(Class c, SEL orig, SEL new) {
 	static dispatch_once_t once;
 	dispatch_once(&once, ^{
 		_UIFont_ZTDynamicFonts = [NSMutableDictionary new];
+		_UIFont_ZTDynamicFontsCache = [NSCache new];
 		[UIFont addBaseStyles];
 	});
 }
@@ -46,9 +49,14 @@ void SwizzleClassMethod(Class c, SEL orig, SEL new) {
 	UIFont* font;
 	
 	if (_UIFont_ZTDynamicFonts) {
-		UIFontDescriptor* fontDescriptor = _UIFont_ZTDynamicFonts[style];
-		CGFloat fontSize = [self preferredFontSizeForTextStyle:style];
-		font = [UIFont fontWithDescriptor:fontDescriptor size:fontSize];
+		font = [_UIFont_ZTDynamicFontsCache objectForKey:style];
+		
+		if (!font) {
+			UIFontDescriptor* fontDescriptor = _UIFont_ZTDynamicFonts[style];
+			CGFloat fontSize = [self preferredFontSizeForTextStyle:style];
+			font = [UIFont fontWithDescriptor:fontDescriptor size:fontSize];
+			[_UIFont_ZTDynamicFontsCache setObject:font forKey:style];
+		}
 	}
 	
 	if (!font) {
@@ -114,16 +122,16 @@ void SwizzleClassMethod(Class c, SEL orig, SEL new) {
 	return fontSize;
 }
 
-#pragma mark - Helpers 
+#pragma mark - Helpers
 
 + (void)addBaseStyles {
 	NSDictionary* styles =
-		@{
-		 ZTFontTextStyleH1 : [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleHeadline],
-		 ZTFontTextStyleH2 : [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleSubheadline],
-		 ZTFontTextStyleH3 : [[[UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleSubheadline] fontDescriptorWithSize:12] fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitBold],
-		 ZTFontTextStyleH4 : [[[UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleSubheadline] fontDescriptorWithSize:10] fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitBold],
-		 };
+	@{
+	  ZTFontTextStyleH1 : [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleHeadline],
+	  ZTFontTextStyleH2 : [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleSubheadline],
+	  ZTFontTextStyleH3 : [[[UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleSubheadline] fontDescriptorWithSize:12] fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitBold],
+	  ZTFontTextStyleH4 : [[[UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleSubheadline] fontDescriptorWithSize:10] fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitBold],
+	  };
 	
 	[UIFont setFontDescriptorsForTextSyles:styles];
 }
