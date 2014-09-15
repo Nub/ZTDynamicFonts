@@ -53,9 +53,13 @@ void SwizzleClassMethod(Class c, SEL orig, SEL new) {
 		
 		if (!font) {
 			UIFontDescriptor* fontDescriptor = _UIFont_ZTDynamicFonts[style];
-			CGFloat fontSize = [self preferredFontSizeForTextStyle:style];
-			font = [UIFont fontWithDescriptor:fontDescriptor size:fontSize];
-			[_UIFont_ZTDynamicFontsCache setObject:font forKey:style];
+			if (fontDescriptor) {
+				CGFloat fontSize = [self preferredFontSizeForTextStyle:style];
+				font = [UIFont fontWithDescriptor:fontDescriptor size:fontSize];
+				if (font) {
+					[_UIFont_ZTDynamicFontsCache setObject:font forKey:style];
+				}
+			}
 		}
 	}
 	
